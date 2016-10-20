@@ -1,0 +1,4 @@
+#!/bin/bash
+
+ENV=prod ./node_modules/webpack/bin/webpack.js -p
+scp dist/bundle.js root@manylingo.com:/home/websites/manylingo.com/js/
