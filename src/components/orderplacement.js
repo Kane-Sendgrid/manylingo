@@ -1,10 +1,14 @@
+import { API } from './api/apiHelper.js'
 import React from 'react';
+import ReactDOM from 'react-dom';
+import { Sidebar } from './account.js';
 import { observer } from 'mobx-react';
 import { observable, action } from 'mobx';
 import DevTool from 'mobx-react-devtools';
 import Dropzone from 'react-dropzone';
 import request from 'superagent';
-import {router} from '../client.js'
+import { router } from '../client.js'
+import { LANGUAGES } from '../constants.js'
 
 let uploadedFiles = observable({
     files: [],
@@ -73,13 +77,68 @@ export default class OrderPlacementForm extends React.Component {
                         <label>Phone number:</label>
                         <input name="phone" type="tel" className="form-control" placeholder="Phone" onChange={this.onChange} />
                     </div>
+
+                    <div className="row">
+                        <div className="col-md-6">
+                            <div className="form-group">
+                                <label>Translate from:</label>
+                                <select name="from_lang" className="form-control" onChange={this.onChange}>
+                                    {
+                                        LANGUAGES.map((o) => (
+                                            <option>{o}</option>
+                                        ), this)
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div className="col-md-6">
+                            <div className="form-group">
+                                <label>To:</label>
+                                <select name="to_lang" className="form-control" onChange={this.onChange}>
+                                    {
+                                        LANGUAGES.map((o) => (
+                                            <option>{o}</option>
+                                        ), this)
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="form-group">
                         <label>Category:</label>
                         <select name="category" className="form-control" onChange={this.onChange}>
-                            <option>Text translation</option>
-                            <option>Video</option>
-                            <option>Other</option>
+                            <optgroup label="General">
+                                <option>General</option>
+                                <option>Marketing</option>
+                                <option>Website</option>
+                            </optgroup>
+                            <optgroup label="Specialized">
+                                <option>Technical/IT</option>
+                                <option>Medical</option>
+                                <option>Financial</option>
+                                <option>Legal</option>
+                                <option>Other specialized</option>
+                            </optgroup>
                         </select>
+                    </div>
+                    <div className="form-group">
+                        <label>Service Type:</label>
+                        <select name="service" className="form-control" onChange={this.onChange}>
+                            <option value="Translation">Translation</option>
+                            <option value="Localization">Localization</option>
+                            <option value="Transcreation">Transcreation</option>
+                            <option value="Voiceover">Voiceover</option>
+                            <option value="Transcription">Transcription</option>
+                            <option value="Proofreading">Proofreading</option>
+                            <option value="Subtitling">Subtitling</option>
+                            <option value="Visual editing">Visual editing</option>
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <div className="controls">
+                            <label><input type="checkbox" className="" name="expedited" value="expedited" /> Expedited</label>
+                        </div>
                     </div>
                     <Dropfile />
                     <br />
@@ -107,17 +166,16 @@ export default class OrderPlacementForm extends React.Component {
     }
 
     placeOrder() {
-        self = this;
-        let r = request.post("/api/orders/place-order");
+        let self = this;
+        let r = request.post("/api/orders/place-order?" + API.authQuery());
         for (let name of Object.keys(this.state.order)) {
-            if(this.state.order[name].length<1) {
+            if (this.state.order[name].length < 1) {
                 bootbox.alert("Please enter " + name);
                 return;
             }
             r.field(name, this.state.order[name]);
         }
         uploadedFiles.files.map((file, n) => {
-            console.log(file);
             r.attach(file.name, file)
         });
 
@@ -134,6 +192,9 @@ export default class OrderPlacementForm extends React.Component {
     }
 
     componentDidMount() {
+        if (API.isAuthenticated()) {
+            ReactDOM.render(<Sidebar />, document.getElementById('manylingo-sidebar'));
+        }
     }
 }
 
